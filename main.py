@@ -4,10 +4,9 @@ import os
 import requests
 import pandas as pd
 import ta
-import asyncio
 
-TOKEN = os.getenv("TELEGRAM_TOKEN") or "VUL_HIER_JE_TOKEN_IN"
-WEBHOOK_URL = os.getenv("TELEGRAM_WEBHOOK_URL") or "https://jouw-url.onrender.com"
+TOKEN = os.getenv("TELEGRAM_TOKEN")
+WEBHOOK_URL = os.getenv("TELEGRAM_WEBHOOK_URL")
 
 TIMEFRAMES = {
     "15m": "15m",
@@ -100,23 +99,19 @@ async def hulp(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(help_text)
 
-# Webhook actief maken bij opstart
-async def main():
-    app = ApplicationBuilder().token(TOKEN).build()
+async def setup_webhook(app):
+    await app.bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
+    print(f"[INFO] Webhook ingesteld op {WEBHOOK_URL}/webhook")
+
+if __name__ == "__main__":
+    app = ApplicationBuilder().token(TOKEN).post_init(setup_webhook).build()
     app.add_handler(CommandHandler("analyse", analyse))
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("ping", ping))
     app.add_handler(CommandHandler("hulp", hulp))
 
-    await app.bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
-    print(f"[INFO] Webhook actief op {WEBHOOK_URL}/webhook")
-
-    await app.run_webhook(
+    app.run_webhook(
         listen="0.0.0.0",
         port=10000,
-        webhook_url=f"{WEBHOOK_URL}/webhook",
-        allowed_updates=Update.ALL_TYPES
+        webhook_url=f"{WEBHOOK_URL}/webhook"
     )
-
-if __name__ == "__main__":
-    asyncio.run(main())
