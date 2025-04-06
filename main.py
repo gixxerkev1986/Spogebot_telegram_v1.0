@@ -57,19 +57,16 @@ def analyze(symbol: str):
         sl_type = "onder" if advies == "LONG signaal" else "boven"
         sl_txt = f"{stop_loss:.2f} ({sl_type} prijs)"
 
-        results.append(
-            f"[{label}]
-"
-            f"- RSI: {rsi_desc}
-"
-            f"- {crossover}
-"
-            f"- Advies: {advies}
-"
-            f"- Stop-loss: {sl_txt}
-"
+        result = (
+            f"[{label}]\n"
+            f"- RSI: {rsi_desc}\n"
+            f"- {crossover}\n"
+            f"- Advies: {advies}\n"
+            f"- Stop-loss: {sl_txt}"
         )
-    return "\n".join(results)
+        results.append(result)
+
+    return "\n\n".join(results)
 
 async def analyse(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
@@ -79,7 +76,7 @@ async def analyse(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"Analyse voor {coin} bezig...")
     try:
         resultaat = analyze(coin)
-        await update.message.reply_text(f"Analyse voor {coin}:\n{resultaat}")
+        await update.message.reply_text(f"Analyse voor {coin}:\n\n{resultaat}")
     except Exception as e:
         await update.message.reply_text(f"Fout bij analyse: {e}")
 
