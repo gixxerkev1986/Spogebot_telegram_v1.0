@@ -5,7 +5,9 @@ import requests
 import pandas as pd
 import ta
 
+# Tokens en webhook-URL uit Render Environment
 TOKEN = os.getenv("TELEGRAM_TOKEN") or "VUL_HIER_JE_TOKEN_IN"
+WEBHOOK_URL = os.getenv("TELEGRAM_WEBHOOK_URL") or "https://jouw-url.onrender.com"
 
 TIMEFRAMES = {
     "15m": "15m",
@@ -13,17 +15,6 @@ TIMEFRAMES = {
     "1h": "1h",
     "1d": "1d"
 }
-
-def fetch_trading_pairs():
-    url = "https://api.binance.com/api/v3/exchangeInfo"
-    response = requests.get(url)
-    if response.status_code != 200:
-        return []
-    data = response.json()
-    symbols = [s['symbol'] for s in data['symbols']]
-    return symbols
-
-TRADING_PAIRS = fetch_trading_pairs()
 
 def fetch_binance_ohlc(symbol: str, interval: str, limit: int = 100):
     url = f"https://api.binance.com/api/v3/klines?symbol={symbol.upper()}&interval={interval}&limit={limit}"
@@ -85,16 +76,7 @@ async def analyse(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     coin = context.args[0].upper()
     if len(coin) <= 4:
-        potential_symbol = coin + "USDT"
-        if potential_symbol in TRADING_PAIRS:
-            coin = potential_symbol
-        else:
-            await update.message.reply_text(f"Geen handelsparen gevonden voor {coin}. Controleer de ticker en probeer opnieuw.")
-            return
-    elif coin not in TRADING_PAIRS:
-        await update.message.reply_text(f"Geen handelsparen gevonden voor {coin}. Controleer de ticker en probeer opnieuw.")
-        return
-
+        coin += "USDT"
     await update.message.reply_text(f"Analyse voor {coin} bezig...")
     try:
         resultaat = analyze(coin)
@@ -124,5 +106,11 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("ping", ping))
     app.add_handler(CommandHandler("hulp", hulp))
-    print("[INFO] Spongebot TA Advanced gestart...")
-    app.run_polling()
+
+    print(f"[INFO] Webhook actief op {WEBHOOK_URL}/webhook")
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=10000,
+        webhook_url=f"{WEBHOOK_URL}/webhook",
+        allowed_updates=Update.ALL_TYPES
+    )
