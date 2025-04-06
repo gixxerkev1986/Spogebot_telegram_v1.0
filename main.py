@@ -33,7 +33,7 @@ def analyze(symbol: str):
     for label, tf in TIMEFRAMES.items():
         df = fetch_binance_ohlc(symbol, tf)
         if df is None or df.empty:
-            results.append(f"[{label}] Data niet beschikbaar.")
+            results.append(f"[{label}] Geen data – mogelijk niet op Binance.")
             continue
 
         close = df["close"]
@@ -70,9 +70,11 @@ def analyze(symbol: str):
 
 async def analyse(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
-        await update.message.reply_text("Gebruik: /analyse <coin> (bijv. BTCUSDT)")
+        await update.message.reply_text("Gebruik: /analyse <coin> (bijv. BTC of BTCUSDT)")
         return
     coin = context.args[0].upper()
+    if len(coin) <= 4:
+        coin += "USDT"
     await update.message.reply_text(f"Analyse voor {coin} bezig...")
     try:
         resultaat = analyze(coin)
